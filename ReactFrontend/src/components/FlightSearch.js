@@ -23,3 +23,27 @@ export default function FlightSearch() {
     </div>
   );
 }
+
+/**
+ * FlightSearch Component
+ *
+ * This React component fetches a list of flights from a backend API
+ * based on a predefined route and date, and displays them in a simple list.
+ *
+ * Key features:
+ *  - Fetch flights from an API endpoint
+ *  - Display airline name, departure, and arrival times for each flight
+ *  - Handle state management using React's useState hook
+ *
+ * Usage:
+ *  - Click the "Search Flights" button to retrieve and display flights
+ *  - The flights list updates automatically after a successful API call
+ *
+ * Dependencies:
+ *  - axios: for making HTTP GET requests
+ *  - React useState hook: for managing the flights state
+ *
+ * Notes:
+ *  - The API endpoint is currently hardcoded for demonstration purposes
+ *  - Error handling is not included in this example
+ */
