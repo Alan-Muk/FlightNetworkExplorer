@@ -34,3 +34,31 @@ def build_graph():
 
 if __name__ == "__main__":
     app.run(port=5001)
+
+"""
+Flask API: Flight Graph Builder
+
+This Flask application provides an endpoint to build a flight graph
+from JSON input. The graph represents airports as nodes and flights as
+directed edges, with the airline as edge metadata.
+
+Endpoint:
+    POST /graph
+        - Request body: JSON object with a "flights" list
+          Example:
+          {
+              "flights": [
+                  {"departure": "AMS", "arrival": "LHR", "airline": "KLM"},
+                  {"departure": "LHR", "arrival": "JFK", "airline": "British Airways"}
+              ]
+          }
+        - Response: JSON object with nodes and edges suitable for visualization
+          {
+              "nodes": [{"id": "AMS"}, {"id": "LHR"}, ...],
+              "links": [{"source": "AMS", "target": "LHR", "airline": "KLM"}, ...]
+          }
+
+Dependencies:
+    - Flask: for the web API
+    - NetworkX: for building and handling the graph structure
+"""
