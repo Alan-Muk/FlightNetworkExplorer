@@ -1,10 +1,24 @@
 # Flight Network App
 
 A full-stack distributed system for searching real-time flight data and visualizing flight routes as an interactive network graph.
-This project demonstrates backend engineering, data processing, caching, persistence, and graph visualization using Spring Boot, React, and NetworkX.
 
-# Architecture
+This project demonstrates:
 
+* backend engineering
+* distributed system architecture
+* data processing pipelines
+* caching strategies
+* persistence layers
+* graph analytics
+* interactive frontend visualization
+
+Built using Spring Boot, React, PostgreSQL, Flask, and NetworkX.
+
+---
+
+# System Architecture
+
+```text id="9b6f8e"
 Frontend (React)
        ↓
 Spring Boot Backend
@@ -16,59 +30,225 @@ PostgreSQL (Search History)
 Python Graph Service (NetworkX)
        ↓
 Graph JSON → React Visualization
+```
+
+---
+
+# Architecture Overview
+
+## Frontend (React)
+
+Handles:
+
+* user interactions
+* flight search forms
+* result rendering
+* graph visualization
+
+Displays interactive force-directed flight route graphs.
+
+---
+
+## Spring Boot Backend
+
+Responsible for:
+
+* REST API endpoints
+* flight search orchestration
+* DTO transformation
+* caching
+* persistence
+* communication with external services
+
+---
+
+## FlightLabs API
+
+Provides:
+
+* real-time flight information
+* route data
+* airport details
+
+---
+
+## PostgreSQL
+
+Stores:
+
+* flight search history
+* query persistence
+* analytics-ready historical records
+
+---
+
+## Python Graph Service
+
+Built with:
+
+* Flask
+* NetworkX
+
+Responsible for:
+
+* graph generation
+* flight network modeling
+* node/edge transformation
+* graph JSON generation for frontend visualization
+
+---
 
 # Project Structure
 
+```bash id="s3q13x"
 flight-network-app/
 │
-├── backend (Spring Boot)
-│   ├── controller
-│   ├── service
-│   ├── client
-│   ├── dto
-│   ├── entity
-│   └── repository
+├── backend/                  # Spring Boot API
+│   ├── controller/
+│   ├── service/
+│   ├── client/
+│   ├── dto/
+│   ├── entity/
+│   └── repository/
 │
-├── frontend (React)
-│   ├── components
+├── frontend/                 # React Application
+│   ├── components/
 │   └── App.js
 │
-├── graph-service (Python)
+├── graph-service/            # Python Graph Microservice
 │   └── app.py
 │
 └── README.md
+```
 
-Frontend (React): Handles user interactions and renders interactive flight graphs.
-Spring Boot Backend: Manages flight search requests, caching, and persistence.
-FlightLabs API: Provides real-time flight data.
-PostgreSQL: Stores flight search history.
-Python Graph Service (NetworkX + Flask): Converts flight data into a directed graph JSON for visualization.
+---
 
 # Features
 
-Flight Search
-Search flights by origin, destination, and date.
-Fetches real-time data via the FlightLabs API.
-Returns clean DTO-based responses for frontend consumption.
-Performance
-Caching with Spring Cache to reduce external API calls.
-Persistence
-Stores flight search history in PostgreSQL.
-Graph Visualization
-Converts flight data into a directed graph:
-Airports = nodes
-Flights = edges
-Interactive graph rendering in React.
+## Flight Search
+
+* Search flights by:
+
+  * origin
+  * destination
+  * departure date
+* Real-time data retrieval using FlightLabs API
+* Clean DTO-based API responses
+
+---
+
+## Performance Optimization
+
+* Spring Cache integration
+* Reduced external API requests
+* Faster repeated queries
+* Improved backend responsiveness
+
+---
+
+## Persistence Layer
+
+* PostgreSQL integration
+* Flight search history storage
+* Historical query tracking
+
+---
+
+## Graph Visualization
+
+Transforms flight data into a directed network graph:
+
+* Airports → Nodes
+* Flights → Directed edges
+
+Features:
+
+* interactive graph rendering
+* airline route visualization
+* network exploration
+
+---
 
 # Frontend UI
 
-React-based interface for search and visualization.
-Displays flight results in a readable format.
-Interactive force-directed graph rendering of flight routes.
+React-based dashboard interface featuring:
+
+* search forms
+* responsive layouts
+* interactive flight results
+* force-directed graph rendering
+* modern visualization workflows
+
+---
 
 # Tech Stack
 
-Backend: Spring Boot, Spring Web, Spring Data JPA, Spring Cache
-Frontend: React, Axios, React Force Graph
-Graph Engine: NetworkX, Flask (microservice)
-Database: PostgreSQL
+## Backend
+
+* Spring Boot
+* Spring Web
+* Spring Data JPA
+* Spring Cache
+
+## Frontend
+
+* React
+* Axios
+* React Force Graph
+
+## Graph Engine
+
+* Flask
+* NetworkX
+
+## Database
+
+* PostgreSQL
+
+---
+
+# Engineering Concepts Demonstrated
+
+This project demonstrates practical experience with:
+
+* distributed systems
+* RESTful APIs
+* microservice communication
+* graph data modeling
+* caching strategies
+* database persistence
+* DTO architecture
+* frontend/backend integration
+* real-time API consumption
+* interactive data visualization
+
+---
+
+# Future Improvements
+
+* JWT authentication
+* Redis distributed caching
+* Docker containerization
+* Kubernetes deployment
+* WebSocket live flight updates
+* Graph analytics algorithms
+* Route optimization features
+* Airport centrality analysis
+* CI/CD pipelines
+* Cloud deployment
+
+---
+
+# Example Use Cases
+
+* Airline route analytics
+* Airport connectivity visualization
+* Flight network exploration
+* Transportation graph analysis
+* Real-time aviation dashboards
+
+---
+
+# License
+
+This project is open source and available under the MIT License.
