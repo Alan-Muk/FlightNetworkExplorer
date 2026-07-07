@@ -1,5 +1,13 @@
 # Flight Network App
 
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?logo=springboot)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql)
+![NetworkX](https://img.shields.io/badge/Graph-NetworkX-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 A full-stack distributed system for searching real-time flight data and visualizing flight routes as an interactive network graph.
 
 This project demonstrates:
