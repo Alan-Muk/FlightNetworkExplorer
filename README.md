@@ -58,6 +58,8 @@ Spring Boot REST API
                          ↓
              Interactive Visualisation
 
+```
+
 # Problem
 
 Global airline networks contain thousands of airports and millions of possible connections.
