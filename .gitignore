@@ -1,21 +1,111 @@
-# Java
-target/
-*.jar
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
 
-# IntelliJ
+# =========================
+# IntelliJ IDEA
+# =========================
 .idea/
 *.iml
 
-# Node
-node_modules/
-build/
+# =========================
+# VS Code
+# =========================
+.vscode/
 
-# Python
-__pycache__/
-*.pyc
+# =========================
+# Java / Maven
+# =========================
+**/target/
+*.class
+*.jar
+*.war
+*.ear
 
-# Env files
+# Maven Wrapper logs
+.mvn/timing.properties
+
+# =========================
+# Spring Boot
+# =========================
+*.log
+logs/
+
+# H2 database (if generated locally)
+data/
+*.mv.db
+*.trace.db
+
+# =========================
+# Node / React / Vite
+# =========================
+**/node_modules/
+**/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
 .env
+.env.*
 
-# OS
-.DS_Store
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+.venv/
+venv/
+env/
+
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Misc
+# =========================
+*.swp
+*.swo
+*~
+
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/

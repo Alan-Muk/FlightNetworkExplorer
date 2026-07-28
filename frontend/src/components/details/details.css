@@ -1,0 +1,183 @@
+.details-panel {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: min(340px, calc(100vw - 40px));
+    max-height: calc(100vh - 40px);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+
+.details-close {
+    position: sticky;
+    top: 10px;
+    margin-left: auto;
+    display: block;
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.route-card {
+    background: rgba(15, 15, 20, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid #333;
+    border-radius: 16px;
+    color: white;
+    padding: 18px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    overflow-y: auto;
+    max-height: none;
+}
+
+.route-card h2 {
+    margin: 0 0 12px;
+    font-size: 22px;
+}
+
+.route-card h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.route-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.route-list small {
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.route-option {
+    background: #1b1b22;
+    border: 1px solid #333;
+    border-radius: 10px;
+    color: white;
+    text-align: left;
+    padding: 10px;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.route-option:hover {
+    border-color: #00ffff;
+}
+
+.route-option.active {
+    border-color: #00ffff;
+    background: #222b35;
+    box-shadow: 0 0 10px rgba(0,255,255,.25);
+}
+
+.route-option small {
+    display: block;
+    margin-top: 4px;
+    color: #aaa;
+    font-size: 12px;
+}
+
+.route-header {
+    margin: 18px 0 10px;
+}
+
+.route-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.route-badge {
+    background: #00ffff;
+    color: #001;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.route-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.route-stats div {
+    background: #1b1b22;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+}
+
+.route-stats span {
+    display: block;
+    color: #888;
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+.route-stats strong {
+    font-size: 15px;
+}
+
+.route-section {
+    margin-top: 18px;
+}
+
+.route-section > span {
+    display: block;
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.route-stop {
+    position: relative;
+    padding: 8px 0 8px 18px;
+    border-left: 2px solid #00ffff;
+    margin-left: 8px;
+}
+
+.route-stop::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 14px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #00ffff;
+}
+
+.airline-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.airline {
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.route-card hr {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 18px 0;
+}
