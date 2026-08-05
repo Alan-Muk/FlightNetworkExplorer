@@ -142,3 +142,20 @@ public List<HubDTO> getMajorHubs() {
     }
 
 }
+
+/**
+ * Service responsible for identifying the busiest airport hubs in the airline
+ * network based on route activity.
+ *
+ * The service calculates a hub score for each airport by combining its
+ * total number of departing and arriving routes. Airports are then ranked by
+ * this score, and the highest-ranking airports are returned as
+ * {@link com.backend.backend.dto.HubDTO} objects containing airport details
+ * and their calculated hub score.
+ *
+ * The resulting data can be used to visualize or analyze the major hubs
+ * within the global airline network.
+ *
+ * 
+ * 
+ */
