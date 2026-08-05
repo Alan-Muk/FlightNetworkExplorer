@@ -97,3 +97,29 @@ public class AirportImportService {
                 .trim();
     }
 }
+
+/**
+ * Service responsible for importing airport data from the OpenFlights
+ * {@code airports.dat} file into the database when the application starts.
+ *
+ * This service is executed automatically after the Spring bean is
+ * initialized via the {@link jakarta.annotation.PostConstruct} annotation.
+ * Before importing, it checks whether airport records already exist to avoid
+ * inserting duplicate data. If the database already contains airport records,
+ * the import process is skipped.
+ *
+ * Each record from the data file is parsed, cleaned, mapped to an
+ * {@link com.backend.backend.model.Airport} entity, and saved using the
+ * {@link com.backend.backend.repository.AirportRepository}. Records that do
+ * not contain the required number of fields are ignored.
+ *
+ * String values are cleaned by removing surrounding quotation marks and
+ * trimming whitespace before being stored. Latitude and longitude values are
+ * parsed as {@code double}. If an error occurs during file reading or data
+ * processing, a {@link RuntimeException} is thrown.
+ *
+ * Data Source: {@code ../data/raw/airports.dat}
+ *
+ * @author Your Name
+ * @since 1.0
+ */
