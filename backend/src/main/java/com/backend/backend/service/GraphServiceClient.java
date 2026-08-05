@@ -135,3 +135,20 @@ public Map paths(
 }
 
 }
+
+/**
+ * Service responsible for communicating with the external graph analysis
+ * service via REST API calls.
+ *
+ * This service acts as a client for the Python graph service running on
+ * {@code http://localhost:8000}. It provides methods for retrieving airport
+ * connection information, the shortest path between two airports, and all
+ * available paths between two airports.
+ *
+ * If the graph service returns a 404 (Not Found) for path-related requests,
+ * the service returns an empty result instead of propagating the exception,
+ * allowing the application to handle missing routes gracefully.
+ *
+ * 
+ * 
+ */
