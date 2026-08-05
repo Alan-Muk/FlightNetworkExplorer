@@ -627,3 +627,32 @@ public RouteComparisonResponse compareRoutes(
     }
 
 }
+
+/**
+ * Service responsible for retrieving and analysing flight route information.
+ *
+ * This service provides functionality for obtaining details about direct
+ * routes, comparing alternative routes between airports, calculating travel
+ * distances, estimating flight times, and ranking route options based on
+ * characteristics such as distance and number of stops.
+ *
+ * The service integrates data from the airport and route repositories and
+ * communicates with the external graph service to retrieve available paths
+ * between airports.
+ * 
+ * 
+ */
+
+/**
+ * Retrieves information about a route between two airports.
+ *
+ * The method determines whether a direct route exists, calculates the
+ * geographical distance between the airports using the Haversine formula,
+ * estimates the flight time, and returns the airlines operating the route.
+ *
+ * @param from the IATA code of the departure airport
+ * @param to the IATA code of the destination airport
+ * @return a {@link RouteDetailsResponse} containing route information
+ * @throws java.util.NoSuchElementException if either airport cannot be found
+ */
+
