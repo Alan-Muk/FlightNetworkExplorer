@@ -175,3 +175,41 @@ public class AirportStatsService {
     }
 
 }
+
+/**
+ * Service responsible for generating statistical information about a specific
+ * airport based on the available route data.
+ *
+ * <p>The service retrieves an airport using its IATA code and analyzes all
+ * stored routes to calculate airport-related statistics. These include the
+ * total number of connected routes, incoming and outgoing route counts,
+ * the most common destination airports, and the airlines operating routes
+ * associated with the airport.</p>
+ *
+ * <p>The calculated statistics are returned as an
+ * {@link com.backend.backend.dto.AirportStatsResponse} object for use by the
+ * application's REST controllers.</p>
+ *
+ * @author Your Name
+ * @since 1.0
+ */
+/**
+ * Retrieves statistical information for the airport identified by the
+ * specified IATA code.
+ *
+ * The method searches for the airport, identifies all routes where the
+ * airport is either the source or destination, and calculates:
+ * 
+ *   Total number of connected routes
+ *   Number of outgoing routes
+ *   Number of incoming routes
+ *   Up to ten unique destination airports
+ *   Up to ten unique airlines serving the airport
+ * 
+ * The results are returned as an {@link AirportStatsResponse}.
+ *
+ * @param iata the IATA airport code
+ * @return an {@link AirportStatsResponse} containing airport statistics
+ * @throws java.util.NoSuchElementException if no airport exists with the
+ *         specified IATA code
+ */
