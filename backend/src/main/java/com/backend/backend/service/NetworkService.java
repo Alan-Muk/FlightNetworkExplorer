@@ -153,3 +153,35 @@ public NetworkResponse getNetwork(String iata) {
     }
 
 }
+
+/**
+ * Service responsible for generating airport network data from the stored
+ * airport and route information.
+ *
+ * The service builds a network centred on a specified airport by retrieving
+ * all of its direct outbound routes and the corresponding destination
+ * airports. The resulting network is returned as a
+ * {@link com.backend.backend.dto.NetworkResponse}, containing airport nodes
+ * and route edges suitable for visualization.
+ *
+ * The service also provides access to a predefined list of airports that
+ * can be used as major hubs within the application.
+ *
+ * 
+ * 
+ */
+
+/**
+ * Generates the network of direct outbound connections for the specified
+ * airport.
+ *
+ * The method retrieves the source airport, all routes originating from it,
+ * and the destination airports served by those routes. The results are
+ * converted into a {@link NetworkResponse} containing airport nodes and route
+ * edges that can be used to visualize the airport's direct flight network.
+ *
+ * @param iata the IATA code of the source airport
+ * @return a {@link NetworkResponse} representing the airport's direct network
+ * @throws RuntimeException if no airport exists with the specified IATA code
+ */
+
