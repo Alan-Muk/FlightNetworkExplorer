@@ -83,3 +83,21 @@ public class GlobalNetworkService {
         return e;
     }
 }
+
+/**
+ * Service responsible for generating a complete representation of the global
+ * airline network from the stored airport and route data.
+ *
+ * The service retrieves all airports and routes from the database and
+ * transforms them into a {@link com.backend.backend.dto.NetworkResponse}
+ * object suitable for network visualization. Airports are represented as
+ * nodes containing their identifiers, names, and geographic coordinates,
+ * while routes are represented as edges connecting source and destination
+ * airports.
+ *
+ * Airports without an IATA code are excluded from the generated network to
+ * ensure that each node can be uniquely identified.
+ *
+ * @author Your Name
+ * @since 1.0
+ */
