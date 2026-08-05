@@ -91,3 +91,28 @@ public class AirlineImportService {
                 .trim();
     }
 }
+
+/**
+ * Service responsible for importing airline data from the OpenFlights
+ * {@code airlines.dat} file into the database when the application starts.
+ *
+ * This service executes automatically after the Spring bean is initialized
+ * via the {@link jakarta.annotation.PostConstruct} annotation. Before importing,
+ * it checks whether airline records already exist to prevent duplicate imports.
+ * If data is already present, the import process is skipped.
+ *
+ * During the import process, each CSV record is parsed, cleaned, mapped to
+ * an {@link com.backend.backend.model.Airline} entity, and persisted using the
+ * {@link com.backend.backend.repository.AirlineRepository}. Records with
+ * insufficient fields are ignored.
+ *
+ * Any quotation marks surrounding field values are removed and whitespace is
+ * trimmed before the values are stored. If an error occurs while reading or
+ * processing the file, a {@link RuntimeException} is thrown to indicate that
+ * the import failed.
+ *
+ * Data Source: {@code ../data/raw/airlines.dat}
+ *
+ * @author Your Name
+ * @since 1.0
+ */
