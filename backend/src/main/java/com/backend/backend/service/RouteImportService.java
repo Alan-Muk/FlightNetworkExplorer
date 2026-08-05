@@ -179,3 +179,29 @@ public class RouteImportService {
     }
 
 }
+
+/**
+ * Service responsible for importing route data from the OpenFlights
+ * {@code routes.dat} file into the database when the application starts.
+ *
+ * This service executes automatically after the Spring bean is initialized
+ * via the {@link jakarta.annotation.PostConstruct} annotation. Before
+ * importing, it checks whether route records already exist to prevent
+ * duplicate imports. If route data is already present, the import process is
+ * skipped.
+ *
+ * Each record from the data file is validated, cleaned, mapped to a
+ * {@link com.backend.backend.model.Route} entity, and stored using the
+ * {@link com.backend.backend.repository.RouteRepository}. Records with missing
+ * fields or invalid source or destination IATA codes are ignored.
+ *
+ * String values are cleaned by removing quotation marks, trimming
+ * whitespace, and converting text to uppercase before being stored. If an
+ * error occurs while reading or processing the file, a
+ * {@link RuntimeException} is thrown.
+ *
+ * Data Source: {@code ../data/raw/routes.dat}
+ *
+ * 
+ * 
+ */
