@@ -1,0 +1,32 @@
+services:
+  # Python graph-service (deploy first, get its URL)
+  - type: web
+    name: flight-graph-service
+    runtime: docker
+    plan: free
+    region: frankfurt
+    rootDir: graph-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: ROUTES_FILE
+        value: /app/data/routes.dat
+      - key: PORT
+        value: "8000"
+
+  # Java backend (needs graph-service URL from above)
+  - type: web
+    name: flight-backend
+    runtime: docker
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health  # or /api/airports
+    envVars:
+      - key: ALLOWED_ORIGINS
+        value: https://alan-muk.github.io,http://localhost:5173
+      - key: GRAPH_SERVICE_URL
+        sync: false  # you'll paste the graph-service URL here after it deploys
+      - key: PORT
+        value: "8080"
