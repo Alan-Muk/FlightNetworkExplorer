@@ -1,0 +1,23 @@
+app = "flight-backend"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  GRAPH_SERVICE_URL = "http://flight-graph-service.internal:8000"
+  SPRING_PROFILES_ACTIVE = "prod"
+  ALLOWED_ORIGINS = "https://alan-muk.github.io,http://localhost:5173"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

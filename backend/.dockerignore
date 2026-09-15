@@ -1,0 +1,6 @@
+target
+.git
+.gitignore
+*.md
+data/flights.mv.db
+data/*.trace.db

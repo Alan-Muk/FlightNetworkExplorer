@@ -5,7 +5,10 @@ from fastapi import FastAPI, HTTPException
 from app.graph_loader import FlightGraph
 
 
-graph = FlightGraph("../data/raw/routes.dat")
+import os
+
+DATA_PATH = os.environ.get("ROUTES_FILE", "../data/raw/routes.dat")
+graph = FlightGraph(DATA_PATH)
 
 
 @asynccontextmanager

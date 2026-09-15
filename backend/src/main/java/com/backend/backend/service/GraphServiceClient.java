@@ -11,7 +11,8 @@ public class GraphServiceClient {
 
   private final RestTemplate restTemplate = new RestTemplate();
 
-  private final String graphUrl = "http://localhost:8000";
+  @Value("${GRAPH_SERVICE_URL:http://localhost:8000}")
+  private String graphUrl;
 
   public Map connections(String airport) {
 
