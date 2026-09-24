@@ -1,0 +1,78 @@
+name: Stack Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:  # allow manual trigger
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Build backend
+        working-directory: backend
+        run: ./mvnw -B clean package -DskipTests
+
+      - name: Install graph service deps
+        working-directory: graph-service
+        run: pip install -r requirements.txt
+
+      - name: Start graph service
+        working-directory: graph-service
+        run: |
+          nohup uvicorn app.main:app --port 8000 > /tmp/graph.log 2>&1 &
+          echo "Waiting for graph service..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8000/ > /dev/null; then
+              echo "Graph service is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Graph service failed to start"
+          cat /tmp/graph.log
+          exit 1
+
+      - name: Start backend
+        working-directory: backend
+        run: |
+          nohup java -jar target/backend-0.0.1-SNAPSHOT.jar > /tmp/backend.log 2>&1 &
+          echo "Waiting for backend..."
+          for i in {1..60}; do
+            if curl -sf http://localhost:8080/api/airports/AMS > /dev/null; then
+              echo "Backend is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend failed to start"
+          cat /tmp/backend.log
+          exit 1
+
+      - name: Run verification script
+        run: ./scripts/verify.sh
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          echo "=== Graph service log ==="
+          cat /tmp/graph.log || true
+          echo "=== Backend log ==="
+          cat /tmp/backend.log || true
