@@ -7,7 +7,6 @@ import {
 } from "react-leaflet";
 
 export default function FlightMap({ nodes, edges }) {
-    const center = [nodes[0].latitude, nodes[0].longitude];
 
     const lookup = {};
 

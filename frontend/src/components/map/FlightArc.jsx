@@ -43,7 +43,7 @@ export default function FlightArc({
 
             [to.latitude, to.longitude],
         ];
-    }, [from, to]);
+    }, [from, to, index]);
 
     return (
         <Polyline

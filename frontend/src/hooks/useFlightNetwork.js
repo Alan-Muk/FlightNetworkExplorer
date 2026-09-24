@@ -20,14 +20,24 @@ export function useFlightNetwork() {
   const [routes, setRoutes] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
 
-  const loadAirports = useCallback(async () => {
-    const response = await client.get("/hubs");
-    setAirports(response.data);
-  }, []);
-
   useEffect(() => {
-    loadAirports();
-  }, [loadAirports]);
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const response = await client.get("/hubs");
+        if (!cancelled) setAirports(response.data);
+      } catch (err) {
+        console.error("Failed to load hubs", err);
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const inflight = useRef(new Set());
 
@@ -172,7 +182,6 @@ export function useFlightNetwork() {
     activeAirports,
 
     // actions
-    loadAirports,
     expandAirport,
     selectAirport,
     selectRoute,
