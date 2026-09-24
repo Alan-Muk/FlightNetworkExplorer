@@ -1,5 +1,7 @@
 package com.backend.backend.service;
 
+import com.backend.backend.client.GraphServiceClient;
+import com.backend.backend.dto.GraphPathsResponse;
 import com.backend.backend.dto.RouteComparisonResponse;
 import com.backend.backend.dto.RouteDetailsResponse;
 import com.backend.backend.dto.RouteOption;
@@ -70,9 +72,8 @@ public class RouteService {
 
   public RouteComparisonResponse compareRoutes(String from, String to) {
 
-    Map pathResponse = graphServiceClient.paths(from, to);
-
-    List<List<String>> paths = (List<List<String>>) pathResponse.get("paths");
+    GraphPathsResponse pathResponse = graphServiceClient.paths(from, to);
+    List<List<String>> paths = pathResponse.paths();
 
     RouteComparisonResponse response = new RouteComparisonResponse();
 

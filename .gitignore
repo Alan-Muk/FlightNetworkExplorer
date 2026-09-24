@@ -3,40 +3,49 @@
 # =========================
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # =========================
-# IntelliJ IDEA
+# Java / Maven / Spring Boot
+# =========================
+**/target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.log
+logs/
+HELP.md
+
+# Maven wrapper (keep these tracked)
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# Local H2 database — backend only
+backend/data/
+*.mv.db
+*.trace.db
+
+# =========================
+# IDEs
 # =========================
 .idea/
 *.iml
-
-# =========================
-# VS Code
-# =========================
+*.iws
+*.ipr
 .vscode/
+.settings/
+.project
+.classpath
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache
 
-# =========================
-# Java / Maven
-# =========================
-**/target/
-*.class
-*.jar
-*.war
-*.ear
-
-# Maven Wrapper logs
-.mvn/timing.properties
-
-# =========================
-# Spring Boot
-# =========================
-*.log
-logs/
-
-# H2 database (if generated locally)
-data/
-*.mv.db
-*.trace.db
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
 
 # =========================
 # Node / React / Vite
@@ -48,9 +57,12 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# =========================
 # Environment files
+# =========================
 .env
 .env.*
+!.env.example
 
 # =========================
 # Python
@@ -59,11 +71,9 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-
 .venv/
 venv/
 env/
-
 .pytest_cache/
 .mypy_cache/
 .coverage
@@ -75,37 +85,3 @@ htmlcov/
 *.swp
 *.swo
 *~
-
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
