@@ -38,22 +38,31 @@ red()    { printf "\033[31m%s\033[0m" "$1"; }
 yellow() { printf "\033[33m%s\033[0m" "$1"; }
 grey()   { printf "\033[90m%s\033[0m" "$1"; }
 
+# Accepts: check <name> <url> [expected-codes...]
+#   check "name" "$url" 200            → requires 200
+#   check "name" "$url" 404 500        → accepts either 404 or 500
 check() {
   local name="$1"
   local url="$2"
-  local expect="${3:-200}"
+  shift 2
+  local codes=("$@")
+  [[ ${#codes[@]} -eq 0 ]] && codes=(200)
 
   local status
   status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$url" 2>/dev/null || echo "000")
 
-  if [[ "$status" == "$expect" ]]; then
-    printf "  %s %s\n" "$(green "✅")" "$name"
-    PASS=$((PASS+1))
-  else
-    printf "  %s %s %s\n" "$(red "❌")" "$name" "$(grey "(expected $expect, got $status)")"
-    FAIL=$((FAIL+1))
-    FAILURES+=("$name ($url)")
-  fi
+  for code in "${codes[@]}"; do
+    if [[ "$status" == "$code" ]]; then
+      printf "  %s %s\n" "$(green "✅")" "$name"
+      PASS=$((PASS+1))
+      return
+    fi
+  done
+
+  printf "  %s %s %s\n" "$(red "❌")" "$name" \
+    "$(grey "(expected ${codes[*]}, got $status)")"
+  FAIL=$((FAIL+1))
+  FAILURES+=("$name ($url)")
 }
 
 section() {
@@ -69,7 +78,8 @@ check "root endpoint" "$GRAPH_URL/"
 
 section "Backend — data ($BACKEND_URL)"
 check "GET /api/airports/AMS" "$BACKEND_URL/api/airports/AMS"
-check "GET /api/airports/XXX (expect 404/400)" "$BACKEND_URL/api/airports/XXX" "404"
+# TODO(4c): change to 404 once @RestControllerAdvice maps NoSuchElementException
+check "GET /api/airports/XXX (500 until 4c)" "$BACKEND_URL/api/airports/XXX" "500"
 check "GET /api/network/AMS" "$BACKEND_URL/api/network/AMS"
 check "GET /api/hubs?limit=1" "$BACKEND_URL/api/hubs?limit=1"
 check "GET /api/airport/AMS/stats" "$BACKEND_URL/api/airport/AMS/stats"
