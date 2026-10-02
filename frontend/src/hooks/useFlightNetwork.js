@@ -99,10 +99,27 @@ export function useFlightNetwork() {
 
   const selectAirport = useCallback(
     async (iata) => {
-      const airport = airports.find((item) => item.iata === iata);
-      if (!airport) return;
+      const code = iata.trim().toUpperCase();
 
-      await expandAirport(iata);
+      // Look in the local list first
+      let airport = airports.find((item) => item.iata === code);
+
+      // Not on the map yet — fetch it from the API
+      if (!airport) {
+        try {
+          const response = await client.get(`/airports/${code}`);
+          airport = response.data;
+          setAirports((prev) => {
+            if (prev.some((a) => a.iata === code)) return prev;
+            return [...prev, airport];
+          });
+        } catch (err) {
+          console.error("Could not load airport", code, err);
+          return;
+        }
+      }
+
+      await expandAirport(code);
 
       // Resolve the origin against the latest airports list
       const currentOrigin = originAirport;

@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
  * apostrophes such as {@code \\'}, or the placeholder {@code N/A}) is treated as {@code null}.
  */
 @Component
+@Order(2)
 public class AirlineImportService implements ApplicationRunner {
 
   private static final Logger log = LoggerFactory.getLogger(AirlineImportService.class);
@@ -110,8 +112,8 @@ public class AirlineImportService implements ApplicationRunner {
           airline.setId(Long.parseLong(cleanRaw(record.get(COL_ID))));
           airline.setName(cleanRaw(record.get(COL_NAME)));
           airline.setAlias(cleanOrNull(record.get(COL_ALIAS)));
-          airline.setIata(iata);
-          airline.setIcao(icao);
+          airline.setIata(cleanCodeVariable(record.get(COL_IATA), 2, 3));
+          airline.setIcao(cleanCode(record.get(COL_ICAO), 4));
           airline.setCountry(cleanOrNull(record.get(COL_COUNTRY)));
           airline.setActive(cleanCode(record.get(COL_ACTIVE), 1));
           airlines.add(airline);
@@ -142,6 +144,27 @@ public class AirlineImportService implements ApplicationRunner {
         skipped,
         droppedIata,
         droppedIcao);
+  }
+
+  /**
+   * Validates a code field that may be 2–3 characters. Airline IATA codes are typically 2
+   * characters (e.g. "KL"), but some are 3. Digits are allowed because a few IATA codes contain
+   * them (e.g. "3O", "4U", "9W").
+   */
+  private static String cleanCodeVariable(String value, int minLen, int maxLen) {
+    String cleaned = cleanRaw(value);
+    if (cleaned == null || cleaned.isEmpty()) {
+      return null;
+    }
+    cleaned = cleaned.toUpperCase();
+    int len = cleaned.length();
+    if (len < minLen || len > maxLen) {
+      return null;
+    }
+    if (!cleaned.matches("[A-Z0-9]+")) {
+      return null;
+    }
+    return cleaned;
   }
 
   // -------------------------------------------------------------------------

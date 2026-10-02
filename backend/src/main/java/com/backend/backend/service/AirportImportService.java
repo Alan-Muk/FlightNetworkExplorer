@@ -1,94 +1,139 @@
 package com.backend.backend.service;
 
+import com.backend.backend.exception.AirportImportException;
 import com.backend.backend.model.Airport;
 import com.backend.backend.repository.AirportRepository;
-import jakarta.annotation.PostConstruct;
-import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-@Service
-public class AirportImportService {
+@Component
+@Order(1)
+public class AirportImportService implements ApplicationRunner {
+
+  private static final Logger log = LoggerFactory.getLogger(AirportImportService.class);
+
+  private static final int COL_ID = 0;
+  private static final int COL_NAME = 1;
+  private static final int COL_CITY = 2;
+  private static final int COL_COUNTRY = 3;
+  private static final int COL_IATA = 4;
+  private static final int COL_ICAO = 5;
+  private static final int COL_LATITUDE = 6;
+  private static final int COL_LONGITUDE = 7;
+  private static final int MIN_COLUMNS = 8;
+  private static final String NULL_MARKER = "\\N";
 
   private final AirportRepository repository;
+  private final Path airportsFile;
 
-  public AirportImportService(AirportRepository repository) {
+  public AirportImportService(
+      AirportRepository repository,
+      @Value("${airports.file:../data/raw/airports.dat}") String airportsFile) {
     this.repository = repository;
+    this.airportsFile = Path.of(airportsFile).toAbsolutePath().normalize();
   }
 
-  @PostConstruct
-  public void importAirports() {
-
-    if (repository.count() > 0) {
-      System.out.println("Airports already loaded");
+  @Override
+  @Transactional
+  public void run(ApplicationArguments args) {
+    long existing = repository.count();
+    if (existing > 0) {
+      log.info("Airports already loaded ({} rows) — skipping import", existing);
       return;
     }
 
-    try (Reader reader = new FileReader("../data/raw/airports.dat");
+    if (!Files.exists(airportsFile)) {
+      throw new AirportImportException("Airports file not found: " + airportsFile);
+    }
+
+    log.info("Importing airports from {}", airportsFile);
+
+    List<Airport> airports = new ArrayList<>();
+    int parsed = 0;
+    int skipped = 0;
+
+    try (Reader reader = Files.newBufferedReader(airportsFile, StandardCharsets.UTF_8);
         CSVParser parser = CSVFormat.DEFAULT.parse(reader)) {
 
       for (CSVRecord record : parser) {
-
-        if (record.size() < 8) {
+        if (record.size() < MIN_COLUMNS) {
+          skipped++;
           continue;
         }
 
-        Airport airport = new Airport();
+        try {
+          Airport airport = new Airport();
+          airport.setId(Long.parseLong(cleanRaw(record.get(COL_ID))));
+          airport.setName(cleanRaw(record.get(COL_NAME)));
+          airport.setCity(cleanOrNull(record.get(COL_CITY)));
+          airport.setCountry(cleanOrNull(record.get(COL_COUNTRY)));
+          airport.setIata(cleanCode(record.get(COL_IATA), 3));
+          airport.setIcao(cleanCode(record.get(COL_ICAO), 4));
+          airport.setLatitude(parseDoubleOrZero(record.get(COL_LATITUDE)));
+          airport.setLongitude(parseDoubleOrZero(record.get(COL_LONGITUDE)));
+          airports.add(airport);
+          parsed++;
 
-        airport.setId(Long.parseLong(record.get(0)));
-
-        airport.setName(clean(record.get(1)));
-
-        airport.setCity(clean(record.get(2)));
-
-        airport.setCountry(clean(record.get(3)));
-
-        airport.setIata(clean(record.get(4)));
-
-        airport.setIcao(clean(record.get(5)));
-
-        airport.setLatitude(Double.parseDouble(record.get(6)));
-
-        airport.setLongitude(Double.parseDouble(record.get(7)));
-
-        repository.save(airport);
+        } catch (Exception e) {
+          skipped++;
+          log.warn(
+              "Skipping malformed airport at line {}: {}",
+              parser.getCurrentLineNumber(),
+              e.getMessage());
+        }
       }
-
-      System.out.println("Airport import completed: " + repository.count());
-
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to import airports", e);
+    } catch (IOException e) {
+      throw new AirportImportException("Failed to read airports file: " + airportsFile, e);
     }
+
+    if (airports.isEmpty()) {
+      log.warn("No valid airports found in {} — nothing imported", airportsFile);
+      return;
+    }
+
+    repository.saveAll(airports);
+    log.info("Airport import completed: {} imported, {} skipped", parsed, skipped);
   }
 
-  private String clean(String value) {
-    return value.replace("\"", "").trim();
+  private static String cleanRaw(String value) {
+    return value == null ? null : value.replace("\"", "").trim();
+  }
+
+  private static String cleanOrNull(String value) {
+    String cleaned = cleanRaw(value);
+    if (cleaned == null || cleaned.isEmpty() || NULL_MARKER.equals(cleaned)) {
+      return null;
+    }
+    return cleaned;
+  }
+
+  private static String cleanCode(String value, int len) {
+    String cleaned = cleanRaw(value);
+    if (cleaned == null || cleaned.isEmpty()) return null;
+    cleaned = cleaned.toUpperCase();
+    if (cleaned.length() != len) return null;
+    if (!cleaned.matches("[A-Z]+")) return null;
+    return cleaned;
+  }
+
+  private static double parseDoubleOrZero(String value) {
+    String cleaned = cleanOrNull(value);
+    return cleaned == null ? 0.0 : Double.parseDouble(cleaned);
   }
 }
-
-/**
- * Service responsible for importing airport data from the OpenFlights {@code airports.dat} file
- * into the database when the application starts.
- *
- * <p>This service is executed automatically after the Spring bean is initialized via the {@link
- * jakarta.annotation.PostConstruct} annotation. Before importing, it checks whether airport records
- * already exist to avoid inserting duplicate data. If the database already contains airport
- * records, the import process is skipped.
- *
- * <p>Each record from the data file is parsed, cleaned, mapped to an {@link
- * com.backend.backend.model.Airport} entity, and saved using the {@link
- * com.backend.backend.repository.AirportRepository}. Records that do not contain the required
- * number of fields are ignored.
- *
- * <p>String values are cleaned by removing surrounding quotation marks and trimming whitespace
- * before being stored. Latitude and longitude values are parsed as {@code double}. If an error
- * occurs during file reading or data processing, a {@link RuntimeException} is thrown.
- *
- * <p>Data Source: {@code ../data/raw/airports.dat}
- *
- * @author Your Name
- * @since 1.0
- */

@@ -46,6 +46,13 @@
   animation: routePulse 1.5s infinite;
 }
 
+/* Invert OpenStreetMap's light tiles into a dark theme.
+   This is a cheap visual approximation, not a true dark basemap. */
+.map-tiles-dark {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9)
+    saturate(0.8);
+}
+
 @keyframes routePulse {
   0% {
     stroke-opacity: 1;

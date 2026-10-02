@@ -31,7 +31,7 @@ public class Airport {
   @Column(length = 100)
   private String country;
 
-  @Column(nullable = false, length = 3)
+  @Column(unique = true, length = 3)
   private String iata;
 
   @Column(length = 4)

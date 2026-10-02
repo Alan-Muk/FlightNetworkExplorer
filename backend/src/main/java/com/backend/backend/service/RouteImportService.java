@@ -1,15 +1,20 @@
 package com.backend.backend.service;
 
 import com.backend.backend.exception.RouteImportException;
+import com.backend.backend.model.Airport;
 import com.backend.backend.model.Route;
+import com.backend.backend.repository.AirportRepository;
 import com.backend.backend.repository.RouteRepository;
+import com.backend.backend.util.GeoUtils;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -18,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,25 +31,11 @@ import org.springframework.transaction.annotation.Transactional;
  * Imports route data from the OpenFlights {@code routes.dat} file into the database on application
  * startup.
  *
- * <p>The import runs once, guarded by a row-count check. If the {@code routes} table already
- * contains data, the import is skipped. The import runs inside a transaction, so a failure
- * mid-import rolls back cleanly and the next startup will retry.
- *
- * <p>Column layout of {@code routes.dat} (0-indexed):
- *
- * <pre>
- *   0: airline IATA          (e.g. "2B")
- *   1: airline ID            (unused)
- *   2: source airport IATA   (e.g. "AER")
- *   3: source airport ID     (unused)
- *   4: destination airport IATA
- *   5: destination airport ID (unused)
- *   6: codeshare             (unused)
- *   7: stops                 (unused)
- *   8: equipment             (unused)
- * </pre>
+ * <p>Runs after {@link AirportImportService} (via {@code @Order}) so that airport coordinates are
+ * available for computing each route's distance using the Haversine formula.
  */
 @Component
+@Order(3)
 public class RouteImportService implements ApplicationRunner {
 
   private static final Logger log = LoggerFactory.getLogger(RouteImportService.class);
@@ -55,12 +47,15 @@ public class RouteImportService implements ApplicationRunner {
   private static final int PROGRESS_INTERVAL = 10_000;
 
   private final RouteRepository repository;
+  private final AirportRepository airportRepository;
   private final Path routesFile;
 
   public RouteImportService(
       RouteRepository repository,
+      AirportRepository airportRepository,
       @Value("${routes.file:../data/raw/routes.dat}") String routesFile) {
     this.repository = repository;
+    this.airportRepository = airportRepository;
     this.routesFile = Path.of(routesFile).toAbsolutePath().normalize();
   }
 
@@ -129,8 +124,44 @@ public class RouteImportService implements ApplicationRunner {
       return;
     }
 
+    int withDistance = computeDistances(routes);
+
     repository.saveAll(routes);
-    log.info("Route import completed: {} imported, {} skipped", parsed, skipped);
+    log.info(
+        "Route import completed: {} imported, {} skipped, {} with distance",
+        parsed,
+        skipped,
+        withDistance);
+  }
+
+  /**
+   * Computes Haversine distance for each route using airport coordinates loaded from the database.
+   * Routes with missing coordinates are left with a {@code null} distance.
+   *
+   * @return the number of routes that received a non-null distance
+   */
+  private int computeDistances(List<Route> routes) {
+    Map<String, Airport> lookup = new HashMap<>();
+    for (Airport airport : airportRepository.findAll()) {
+      if (airport.getIata() != null) {
+        lookup.put(airport.getIata().toUpperCase(), airport);
+      }
+    }
+
+    int withDistance = 0;
+    for (Route route : routes) {
+      Airport from = lookup.get(route.getSourceIata());
+      Airport to = lookup.get(route.getDestinationIata());
+      if (from == null || to == null) {
+        continue;
+      }
+      double distance =
+          GeoUtils.haversine(
+              from.getLatitude(), from.getLongitude(), to.getLatitude(), to.getLongitude());
+      route.setDistanceKm(distance);
+      withDistance++;
+    }
+    return withDistance;
   }
 
   private static boolean isMissing(String value) {

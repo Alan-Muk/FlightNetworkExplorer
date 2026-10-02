@@ -1,781 +1,155 @@
-# FlightNetworkExplorer
+# Flight Network Explorer
 
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
-![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?logo=springboot&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white)
-![NetworkX](https://img.shields.io/badge/Graph-NetworkX-blue)
-![Leaflet](https://img.shields.io/badge/Maps-Leaflet-199900?logo=leaflet&logoColor=white)
-![Database](https://img.shields.io/badge/Database-H2%20%7C%20PostgreSQL-blue)
+**An interactive aviation graph analysis platform.** Explore global airport connectivity, discover routes between destinations, and analyse airline networks through a dynamic world map backed by real graph algorithms.
 
-An interactive airline network exploration platform that transforms global flight data into dynamic graph structures using geographic visualisation, graph algorithms, and route analysis.
+![Backend](https://github.com/Alan-Muk/FlightNetworkExplorer/actions/workflows/backend.yml/badge.svg)
+![Graph Service](https://github.com/Alan-Muk/FlightNetworkExplorer/actions/workflows/graph-service.yml/badge.svg)
+![Frontend](https://github.com/Alan-Muk/FlightNetworkExplorer/actions/workflows/frontend.yml/badge.svg)
 
-FlightNetworkExplorer allows users to explore airport connections, expand flight networks interactively, discover routes between destinations, and analyse airline connectivity through an interactive world map.
+<!-- Screenshot placeholder — replace with an actual capture of the running app -->
+<!-- ![FlightNetworkExplorer screenshot](./docs/screenshot.png) -->
 
 ---
 
-# Overview
+## What it does
 
-FlightNetworkExplorer is a full-stack aviation network analysis system built around graph-based modelling of airline routes.
+- **Interactive world map** — airports rendered as markers, sized by connectivity, on a dark-themed basemap
+- **Route discovery** — click any two airports to compare every available route, colour-coded by distance and flight time
+- **Dynamic network expansion** — the global graph isn't loaded all at once; airports are expanded on demand, one neighbourhood at a time
+- **Hub ranking and centrality** — airports ranked by real graph metrics (degree, betweenness, closeness) computed in a dedicated Python service
+- **Airport statistics** — routes, airlines, top destinations, and connections per airport
 
-Instead of treating flights as isolated records, the system represents the global airline network as a directed graph:
+## Architecture
 
-- Airports become graph nodes
-- Flight routes become directed edges
-- Graph algorithms discover paths and connections
-- The frontend provides interactive geographic exploration
+```mermaid
+flowchart LR
+    User([User])
+    FE["React Frontend<br/>(Vite · Leaflet)<br/>:5173"]
+    BE["Spring Boot Backend<br/>(Java 21 · JPA)<br/>:8080"]
+    GS["Python Graph Service<br/>(FastAPI · NetworkX)<br/>:8000"]
+    DB[("H2<br/>Airports · Airlines · Routes")]
 
-The application combines:
-
-- React and Leaflet for map-based visualisation
-- Spring Boot for REST APIs and backend services
-- Python and NetworkX for graph computation
-
-## System Workflow
-
-```text
-User Interaction
-        |
-        ↓
-React Interactive Map
-        |
-        ↓
-Spring Boot REST API
-        |
-        ├───────────────┐
-        ↓               ↓
- Flight Database   Python Graph Service
-                    (NetworkX)
-                         |
-                         ↓
-                Graph Algorithms
-                         |
-                         ↓
-              Routes and Connections
-                         |
-                         ↓
-             Interactive Visualisation
-
+    User -->|HTTPS| FE
+    FE -->|"REST /api/*"| BE
+    BE -->|JDBC| DB
+    BE -->|"REST /path, /paths, /centrality"| GS
 ```
 
-# Problem
+**Three services, one system:**
 
-Global airline networks contain thousands of airports and millions of possible connections.
+| Service | Language | Responsibility |
+|---|---|---|
+| **Frontend** | React + Vite + Leaflet | Interactive map, search, sidebar, route visualisation |
+| **Backend** | Java 21 + Spring Boot | REST API, relational data, imports, entity management |
+| **Graph service** | Python + FastAPI + NetworkX | Graph algorithms, path finding, centrality |
 
-Traditional flight databases represent routes as independent records, making it difficult to understand:
+The backend owns the **relational** model of the data (airports, airlines, route rows). The graph service owns the **graph** model (nodes and weighted edges). They're separate because they answer different questions:
 
-- How airports connect globally
-- Which airports act as major hubs
-- What paths exist between destinations
-- How routes relate through intermediate airports
-- How network structures evolve
+- "How many airlines fly AMS → LHR?" → **backend**, relational query
+- "What's the shortest route AMS → SYD?" → **graph service**, Dijkstra on a 37k-edge graph
 
-FlightNetworkExplorer models airline data as a graph, enabling users to explore connectivity, analyse routes, and visualise relationships between airports.
+## Data
 
----
+The project uses the [OpenFlights](https://openflights.org/data.html) dataset — a public-domain collection of airports, airlines, and routes.
 
-# Architecture
+| Entity | Rows | Source |
+|---|---|---|
+| Airports | 7,698 | `airports.dat` |
+| Airlines | 6,162 | `airlines.dat` |
+| Routes (per-airline) | 67,663 | `routes.dat` |
+| Unique routes (graph edges) | 37,595 | computed |
+| Graph nodes | 3,425 | airports with at least one route |
 
-```text
-React + Leaflet Client
-          |
-          |
-     Spring Boot API
-          |
-          |
-  Flight Data Services
-          |
-          |
- Python Graph Engine
-          |
-          |
-     NetworkX Graph
-```
+**Why 67,663 rows become 37,595 edges:** OpenFlights stores routes as one row per (airline, source, destination) triple. The graph service collapses these into single edges — one per physical route — so a flight served by three airlines counts once.
 
----
+**Why 7,698 airports become 3,425 nodes:** about 4,300 airports in the dataset have no associated routes. They're imported to the backend for lookup purposes but don't appear in the graph.
 
-# Frontend
+## Quick start
 
-Built with React and Vite.
-
-## Responsibilities
-
-- Interactive world map rendering
-- Airport selection
-- Route visualisation
-- Dynamic graph expansion
-- Route highlighting
-- Airport information panels
-
-## Technologies
-
-- React
-- Vite
-- JavaScript
-- React Leaflet
-- CSS
-
----
-
-# Backend
-
-Built with Java 21 and Spring Boot.
-
-## Responsibilities
-
-- REST API layer
-- Airport and route management
-- Database communication
-- Data processing
-- Graph service integration
-
-## Technologies
-
-- Java 21
-- Spring Boot
-- Spring MVC
-- Spring Data JPA
-- Hibernate
-- H2 Database
-- PostgreSQL support
-
-## Backend Structure
-
-```text
-backend
-
-├── controller
-│       REST endpoints
-│
-├── service
-│       Business logic
-│
-├── repository
-│       Database access
-│
-├── model
-│       JPA entities
-│
-└── dto
-        API response objects
-```
-
----
-
-# Graph Service
-
-The graph service is a dedicated Python service responsible for graph analysis and route computation.
-
-## Technologies
-
-- Python
-- FastAPI
-- NetworkX
-
-The airline network is represented as a directed graph:
-
-```text
-Airport = Node
-
-Flight Route = Directed Edge
-```
-
-Example:
-
-```text
-        JFK
-         |
-         ↓
-        LHR
-         |
-         ↓
-        AMS
-```
-
-Each edge stores route information including airline and connection data.
-
----
-
-# API
-
-## Expand Airport Network
-
-```
-GET /api/network/{iata}
-```
-
-Example:
-
-```
-GET /api/network/AMS
-```
-
-Returns connected airports and routes around a selected airport.
-
-Used for dynamic map expansion.
-
----
-
-## Get Route Details
-
-```
-GET /api/routes/{from}/{to}
-```
-
-Example:
-
-```
-GET /api/routes/AMS/JFK
-```
-
-Returns route information between two airports.
-
-Example response:
-
-```json
-{
-  "from": "AMS",
-  "to": "JFK",
-  "routes": [
-    {
-      "via": "LHR",
-      "airline": "Example Airline"
-    }
-  ]
-}
-```
-
----
-
-## Compare Routes
-
-```
-GET /api/routes/compare/{from}/{to}
-```
-
-Example:
-
-```
-GET /api/routes/compare/AMS/JFK
-```
-
-Returns available route options.
-
-Example:
-
-```text
-AMS
-
-├── LHR
-│     |
-│     ↓
-│    JFK
-│
-└── CDG
-      |
-      ↓
-     JFK
-```
-
----
-
-## Airport Statistics
-
-```
-GET /api/airport/{iata}/stats
-```
-
-Example:
-
-```
-GET /api/airport/AMS/stats
-```
-
-Returns statistics for a specific airport.
-
----
-
-## Graph Connections
-
-```
-GET /api/graph/connections/{airport}
-```
-
-Example:
-
-```
-GET /api/graph/connections/JFK
-```
-
-Returns neighbouring airports from the graph service.
-
----
-
-## Graph Path Finding
-
-```
-GET /api/graph/path/{from}/{to}
-```
-
-Example:
-
-```
-GET /api/graph/path/JFK/LHR
-```
-
-Returns a route path between airports.
-
----
-
-# Core Features
-
-## Interactive World Map
-
-The application provides an interactive global map for exploring airline networks.
-
-### Features
-
-- Airport exploration
-- Route rendering
-- Geographic visualisation
-- Connection inspection
-- Network discovery
-
-The map allows users to navigate the airline graph visually rather than through static tables.
-
----
-
-## Dynamic Network Expansion
-
-The complete global network is not loaded immediately.
-
-Instead, airports are expanded on demand:
-
-```text
-Select Airport
-
-      |
-      ↓
-
-Request Connections
-
-      |
-      ↓
-
-Add Airports and Routes
-
-      |
-      ↓
-
-Continue Exploration
-```
-
-### Benefits
-
-- Improved performance
-- Reduced visual complexity
-- Scalable exploration
-- Focused graph rendering
-
----
-
-## Route Comparison
-
-Users can compare possible journeys between airports.
-
-### Features
-
-- Multiple route options
-- Multi-leg journeys
-- Route highlighting
-- Connection discovery
-- Alternative path exploration
-
-Example:
-
-```text
-Amsterdam
-
-     |
-     |
-    LHR
-     |
-     |
-   New York
-```
-
----
-
-## Graph-Based Analysis
-
-The Python graph engine uses NetworkX to analyse the airline network.
-
-### Implemented Operations
-
-- Airport neighbour lookup
-- Shortest path discovery
-- Alternative route generation
-- Graph traversal
-
-### Algorithms
-
-```python
-networkx.shortest_path
-networkx.shortest_simple_paths
-```
-
----
-
-# Airport Network Analysis
-
-The system supports:
-
-- Airport connectivity exploration
-- Hub discovery
-- Route analysis
-- Network traversal
-- Graph-based aviation research
-
-Example:
-
-```text
-            LHR
-
-             |
-             |
-
-JFK ---- AMS ---- CDG
-
-             |
-             |
-
-            FRA
-```
-
----
-
-# Technical Highlights
-
-- Built a full-stack airline graph exploration platform
-- Modelled flight routes as directed graph structures
-- Created an interactive geographic visualisation system
-- Integrated Spring Boot with a Python graph processing service
-- Implemented graph-based route discovery
-- Built reusable React map components
-- Designed modular backend services
-- Separated visualisation, API logic, and graph computation
-
----
-
-# Design Decisions
-
-## Directed Graph Model
-
-Airline routes are represented as directed edges.
-
-Example:
-
-```text
-London → Amsterdam
-```
-
-does not automatically imply:
-
-```text
-Amsterdam → London
-```
-
-This reflects real airline networks where routes can differ by direction.
-
----
-
-## Separate Graph Service
-
-Graph computation is isolated from the main backend.
-
-### Benefits
-
-- Dedicated graph processing layer
-- Independent algorithm development
-- Clear separation of responsibilities
-- Easier future scaling
-
----
-
-## Local Graph Expansion
-
-Large global networks quickly become difficult to display.
-
-The explorer expands locally:
-
-```text
-User selects airport
-
-        |
-        ↓
-
-Fetch connections
-
-        |
-        ↓
-
-Add nodes and routes
-
-        |
-        ↓
-
-Continue exploration
-```
-
-This keeps the visualisation manageable while supporting large datasets.
-
----
-
-# Tech Stack
-
-## Frontend
-
-- React
-- Vite
-- React Leaflet
-- JavaScript
-- CSS
-
-## Backend
-
-- Java 21
-- Spring Boot
-- Spring Data JPA
-- Hibernate
-- H2
-- PostgreSQL
-
-## Graph Service
-
-- Python
-- FastAPI
-- NetworkX
-
-## Data Processing
-
-- CSV route imports
-- Airport datasets
-- Airline datasets
-
-## Algorithms
-
-- Graph traversal
-- Shortest path discovery
-- Alternative path generation
-
----
-
-# How It Works
-
-1. User opens the interactive world map
-2. Frontend requests airport network data
-3. Spring Boot processes API requests
-4. Graph service performs graph analysis
-5. Routes and connections are returned as JSON
-6. React renders airports and flight paths
-7. Users continue expanding the network
-
----
-
-# Example Exploration
-
-Starting from:
-
-```text
-Amsterdam (AMS)
-```
-
-The explorer discovers:
-
-```text
-AMS
-
-├── London (LHR)
-├── Paris (CDG)
-├── Frankfurt (FRA)
-└── New York (JFK)
-```
-
-Selecting another airport allows route comparison and path discovery.
-
----
-
-# Example Use Cases
-
-- Airline network exploration
-- Graph algorithm demonstrations
-- Route discovery
-- Airport connectivity analysis
-- Geographic data visualisation
-- Aviation research
-- Network science experiments
-
----
-
-# Challenges
-
-## Network Size
-
-Global flight datasets contain thousands of airports and routes.
-
-### Solution
-
-- Dynamic expansion
-- Selective loading
-- Local graph exploration
-
----
-
-## Graph Complexity
-
-Flight networks contain many possible paths.
-
-### Solution
-
-- Directed graph modelling
-- Dedicated graph service
-- NetworkX algorithms
-
----
-
-## Visualization Complexity
-
-Large graphs can become difficult to interpret.
-
-### Solution
-
-- Interactive exploration
-- Route highlighting
-- Focused rendering
-- Incremental expansion
-
----
-
-# Future Improvements
-
-- Add weighted routes using distance or travel time
-- Add airport centrality calculations
-- Add graph caching
-- Add Docker deployment
-- Add authentication
-- Add richer analytics
-- Add historical flight data
-- Improve route ranking algorithms
-
----
-
-# Running Locally
-
-## Clone Repository
+Three terminals. The graph service is optional but required for route comparison and centrality.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/FlightNetworkExplorer
-
-cd FlightNetworkExplorer
-```
-
----
-
-## Start Graph Service
-
-```bash
+# Terminal 1 — graph service
 cd graph-service
-
 pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 
-uvicorn app.main.py --reload --port 8000
-```
-
-Graph service:
-
-```
-http://localhost:8000
-```
-
----
-
-## Start Backend
-
-```bash
+# Terminal 2 — backend
 cd backend
-
 ./mvnw spring-boot:run
-```
 
-Backend:
-
-```
-http://localhost:8080
-```
-
----
-
-## Start Frontend
-
-```bash
+# Terminal 3 — frontend
 cd frontend
-
 npm install
-
 npm run dev
 ```
 
-Frontend:
+Open **http://localhost:5173**.
+
+On first backend start, three importers run automatically (~30 seconds) and populate the H2 database with airports, airlines, and routes. Subsequent starts skip the import.
+
+See [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) for the full runbook, verification checklist, and troubleshooting.
+
+## API surface
+
+**Backend — `http://localhost:8080`**
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/airports/{iata}` | Look up an airport by IATA code |
+| `GET` | `/api/network/{iata}` | Airports directly reachable from the given airport |
+| `GET` | `/api/airport/{iata}/stats` | Route count, destinations, airlines |
+| `GET` | `/api/hubs` | Top-N airports by connectivity (paginated by limit) |
+| `GET` | `/api/airlines` | Paginated airline list |
+| `GET` | `/api/airlines/{iata}` | Airline by IATA |
+| `GET` | `/api/airlines/{iata}/routes` | Routes operated by an airline |
+| `GET` | `/api/routes/{from}/{to}` | Route details between two airports |
+| `GET` | `/api/routes/compare/{from}/{to}` | Alternative route comparison |
+| `GET` | `/api/graph/connections/{iata}` | Pass-through to the graph service |
+| `GET` | `/api/graph/path/{from}/{to}` | Weighted shortest path |
+| `GET` | `/api/graph/centrality` | Degree / betweenness / closeness ranking |
+
+**Graph service — `http://localhost:8000`**
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/` | Service status and graph size |
+| `GET` | `/connections/{iata}` | Direct successors of a node |
+| `GET` | `/path/{from}/{to}` | Shortest path by distance (km) |
+| `GET` | `/paths/{from}/{to}` | Up to 10 alternative paths, ordered by distance |
+| `GET` | `/centrality?metric=&limit=` | Precomputed centrality rankings |
+
+## Project layout
 
 ```
-http://localhost:5173
+FlightNetworkExplorer/
+├── backend/           Java 21 · Spring Boot — REST API + persistence
+├── graph-service/     Python · FastAPI + NetworkX — graph algorithms
+├── frontend/          React · Vite + Leaflet — interactive map
+├── data/raw/          OpenFlights source files (.dat)
+├── docs/              Development and operations documentation
+├── scripts/           verify.sh and utilities
+└── README.md          (this file)
 ```
 
----
+Each service has its own README with a deep dive:
 
-# Project Structure
+- [`backend/README.md`](./backend/README.md) — entities, importers, error handling, caching
+- [`graph-service/README.md`](./graph-service/README.md) — graph model, algorithms, centrality
+- [`frontend/README.md`](./frontend/README.md) — components, state, data flow
 
-```text
-FlightNetworkExplorer
+## Design decisions
 
-├── frontend
-│   ├── src
-│   │   ├── components
-│   │   ├── api
-│   │   └── assets
-│   └── package.json
-│
-├── backend
-│   ├── src/main/java
-│   │   ├── controller
-│   │   ├── service
-│   │   ├── repository
-│   │   ├── model
-│   │   └── dto
-│   └── pom.xml
-│
-└── graph-service
-    ├── app
-    │   ├── main.py
-    │   └── graph_loader.py
-    └── requirements.txt
-```
+**Directed graph model.** Airline routes are directed edges, not undirected. London → Amsterdam and Amsterdam → London are distinct routes in the data and are treated as such. This matches how the source data is structured and avoids inventing symmetry that doesn't exist.
 
----
+**Weighted paths.** The graph service weights each edge by distance in kilometres. `nx.shortest_path` with `weight="distance_km"` returns the geometrically shortest path, not the path with fewest hops. A 3-hop route across the North Atlantic can beat a 5-hop route via the Middle East.
 
+**Local graph expansion.** The full 37,595-edge graph is not sent to the browser. The frontend requests a network one airport at a time — `/api/network/{iata}` returns direct connections only. This keeps payloads small and lets users explore without loading everything.
 
+**Separate graph service.** Graph algorithms live in Python (NetworkX) rather than Java. Betweenness centrality on a 3,425-node graph is a five-line call in NetworkX; reimplementing it in Java would be a project in itself. The trade-off is one more process to run and an HTTP hop between services.
 
-<img width="1366" height="768" alt="Screenshot From 2026-07-28 09-45-38" src="https://github.com/user-attachments/assets/20b64194-c329-4834-a7e9-166ee7996784" />
-<img width="1366" height="768" alt="Screenshot From 2026-07-28 09-45-15" src="https://github.com/user-attachments/assets/0f1c5a7a-cac1-4cab-8c5f-646d81c50b99" />
-<img width="1366" height="768" alt="Screenshot From 2026-07-28 09-43-49" src="https://github.com/user-attachments/assets/7684d804-6e23-436c-9269-fe33cb1776b9" />
-<img width="1366" height="768" alt="Screenshot From 2026-07-28 09-43-35" src="https://github.com/user-attachments/assets/ec2bc120-b5f2-4dfe-98e8-7aa95945594d" />
+**Edge deduplication.** Multiple airlines flying the same physical route collapse into one edge with an `airline` attribute. This is why the graph has 37,595 edges from 67,663 rows. Without deduplication, path finding would still work but the numbers would be misleading.
 
+## License
 
-
----
-
-# License
-
-MIT License
+MIT. See [LICENSE](./LICENSE) if present.

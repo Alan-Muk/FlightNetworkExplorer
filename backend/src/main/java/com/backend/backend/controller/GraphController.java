@@ -1,8 +1,11 @@
 package com.backend.backend.controller;
 
 import com.backend.backend.client.GraphServiceClient;
+import com.backend.backend.dto.GraphCentralityResponse;
 import com.backend.backend.dto.GraphConnectionsResponse;
 import com.backend.backend.dto.GraphPathResponse;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -39,5 +42,16 @@ public class GraphController {
       @PathVariable @Pattern(regexp = "^[A-Za-z]{3}$", message = "IATA code must be 3 letters")
           String to) {
     return graph.path(from, to);
+  }
+
+  @GetMapping("/centrality")
+  public GraphCentralityResponse centrality(
+      @RequestParam(defaultValue = "degree")
+          @Pattern(
+              regexp = "^(degree|betweenness|closeness)$",
+              message = "metric must be degree, betweenness, or closeness")
+          String metric,
+      @RequestParam(defaultValue = "50") @Min(1) @Max(500) int limit) {
+    return graph.centrality(metric, limit);
   }
 }

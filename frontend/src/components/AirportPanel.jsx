@@ -51,16 +51,16 @@ export default function AirportPanel({ airport }) {
             style={{
                 background: "rgba(0,0,0,0.9)",
                 color: "white",
-                padding: 20,
+                padding: 14,
                 borderRadius: 12,
                 border: "1px solid #00ffff",
                 boxShadow: "0 0 20px rgba(0,255,255,.4)",
             }}
         >
-            <h2 style={{ color: "#00ffff", margin: "0 0 8px" }}>
+            <h2 style={{ color: "#00ffff", margin: "0 0 6px", fontSize: 20 }}>
                 {airport.iata}
             </h2>
-            <h3 style={{ margin: "0 0 8px" }}>{airport.name}</h3>
+            <h3 style={{ margin: "0 0 6px", fontSize: 15 }}>{airport.name}</h3>
             <p style={{ margin: "0 0 12px", color: "#aaa" }}>
                 {airport.city}
                 {airport.country && `, ${airport.country}`}

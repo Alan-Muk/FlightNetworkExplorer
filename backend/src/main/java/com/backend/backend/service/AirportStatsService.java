@@ -1,103 +1,113 @@
 package com.backend.backend.service;
 
 import com.backend.backend.dto.AirportStatsResponse;
+import com.backend.backend.exception.AirportNotFoundException;
 import com.backend.backend.model.Airport;
 import com.backend.backend.model.Route;
 import com.backend.backend.repository.AirportRepository;
 import com.backend.backend.repository.RouteRepository;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Computes statistics for a single airport from the stored route data.
+ *
+ * <p>For the requested IATA code, produces:
+ *
+ * <ul>
+ *   <li>{@code connections} — distinct destinations + distinct origins
+ *   <li>{@code outgoingRoutes} — distinct destinations reachable from this airport
+ *   <li>{@code incomingRoutes} — distinct origins that reach this airport
+ *   <li>{@code topDestinations} — up to 10 destinations, ordered by how many routes serve them
+ *   <li>{@code airlines} — up to 10 airlines, ordered alphabetically
+ * </ul>
+ *
+ * <p>Counts are distinct-per-airport rather than row-based, so a physical route flown by multiple
+ * airlines counts once. Self-loops (routes where source equals destination) are excluded from
+ * {@code topDestinations}.
+ */
 @Service
 public class AirportStatsService {
 
-  private final AirportRepository airportRepository;
+  private static final int TOP_LIMIT = 10;
 
+  private final AirportRepository airportRepository;
   private final RouteRepository routeRepository;
 
   public AirportStatsService(AirportRepository airportRepository, RouteRepository routeRepository) {
-
     this.airportRepository = airportRepository;
-
     this.routeRepository = routeRepository;
   }
 
+  @Transactional(readOnly = true)
   public AirportStatsResponse getStats(String iata) {
+    String code = iata == null ? "" : iata.trim().toUpperCase();
 
-    Airport airport = airportRepository.findByIata(iata.toUpperCase()).orElseThrow();
+    Airport airport =
+        airportRepository.findByIata(code).orElseThrow(() -> new AirportNotFoundException(code));
 
-    List<Route> routes = routeRepository.findAll();
+    List<Route> outgoing = routeRepository.findBySourceIata(code);
+    List<Route> incoming = routeRepository.findByDestinationIata(code);
 
-    List<Route> related =
-        routes.stream()
-            .filter(
-                route ->
-                    route.getSourceIata().equalsIgnoreCase(iata)
-                        || route.getDestinationIata().equalsIgnoreCase(iata))
+    // --- distinct destinations / origins ---
+    List<String> distinctDestinations =
+        outgoing.stream()
+            .map(Route::getDestinationIata)
+            .filter(Objects::nonNull)
+            .filter(dest -> !dest.equalsIgnoreCase(code)) // exclude self-loops
+            .distinct()
+            .toList();
+
+    List<String> distinctOrigins =
+        incoming.stream()
+            .map(Route::getSourceIata)
+            .filter(Objects::nonNull)
+            .filter(origin -> !origin.equalsIgnoreCase(code))
+            .distinct()
+            .toList();
+
+    // --- top destinations by frequency ---
+    Map<String, Long> destinationCounts =
+        outgoing.stream()
+            .map(Route::getDestinationIata)
+            .filter(Objects::nonNull)
+            .filter(dest -> !dest.equalsIgnoreCase(code))
+            .collect(Collectors.groupingBy(dest -> dest, Collectors.counting()));
+
+    List<String> topDestinations =
+        destinationCounts.entrySet().stream()
+            .sorted(
+                Map.Entry.<String, Long>comparingByValue()
+                    .reversed()
+                    .thenComparing(Map.Entry.comparingByKey()))
+            .limit(TOP_LIMIT)
+            .map(Map.Entry::getKey)
+            .toList();
+
+    // --- airlines (alphabetical) ---
+    List<String> airlines =
+        java.util.stream.Stream.concat(outgoing.stream(), incoming.stream())
+            .map(Route::getAirline)
+            .filter(Objects::nonNull)
+            .filter(s -> !s.isBlank())
+            .distinct()
+            .sorted(Comparator.naturalOrder())
+            .limit(TOP_LIMIT)
             .toList();
 
     AirportStatsResponse response = new AirportStatsResponse();
-
     response.setIata(airport.getIata());
-
     response.setName(airport.getName());
-
-    response.setConnections(related.size());
-
-    response.setOutgoingRoutes(
-        (int) related.stream().filter(r -> r.getSourceIata().equalsIgnoreCase(iata)).count());
-
-    response.setIncomingRoutes(
-        (int) related.stream().filter(r -> r.getDestinationIata().equalsIgnoreCase(iata)).count());
-
-    response.setTopDestinations(
-        related.stream()
-            .map(Route::getDestinationIata)
-            .filter(Objects::nonNull)
-            .distinct()
-            .limit(10)
-            .toList());
-
-    response.setAirlines(
-        related.stream()
-            .map(Route::getAirline)
-            .filter(Objects::nonNull)
-            .distinct()
-            .limit(10)
-            .toList());
-
+    response.setConnections(distinctDestinations.size() + distinctOrigins.size());
+    response.setOutgoingRoutes(distinctDestinations.size());
+    response.setIncomingRoutes(distinctOrigins.size());
+    response.setTopDestinations(topDestinations);
+    response.setAirlines(airlines);
     return response;
   }
 }
-
-/**
- * Service responsible for generating statistical information about a specific airport based on the
- * available route data.
- *
- * <p>The service retrieves an airport using its IATA code and analyzes all stored routes to
- * calculate airport-related statistics. These include the total number of connected routes,
- * incoming and outgoing route counts, the most common destination airports, and the airlines
- * operating routes associated with the airport.
- *
- * <p>The calculated statistics are returned as an {@link
- * com.backend.backend.dto.AirportStatsResponse} object for use by the application's REST
- * controllers.
- *
- * @author Your Name
- * @since 1.0
- */
-/**
- * Retrieves statistical information for the airport identified by the specified IATA code.
- *
- * <p>The method searches for the airport, identifies all routes where the airport is either the
- * source or destination, and calculates:
- *
- * <p>Total number of connected routes Number of outgoing routes Number of incoming routes Up to ten
- * unique destination airports Up to ten unique airlines serving the airport
- *
- * <p>The results are returned as an {@link AirportStatsResponse}.
- *
- * @param iata the IATA airport code
- * @return an {@link AirportStatsResponse} containing airport statistics
- * @throws java.util.NoSuchElementException if no airport exists with the specified IATA code
- */

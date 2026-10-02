@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ public class HubService {
     return getMajorHubs(DEFAULT_LIMIT);
   }
 
+  @Cacheable(cacheNames = "hubs", key = "#limit")
   @Transactional(readOnly = true)
   public List<HubDTO> getMajorHubs(int limit) {
     int poolSize = Math.max(limit * 2, SCORE_CANDIDATE_POOL);

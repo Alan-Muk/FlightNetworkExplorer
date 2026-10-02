@@ -2,6 +2,7 @@ package com.backend.backend.repository;
 
 import com.backend.backend.model.Route;
 import java.util.List;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,6 +25,10 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
 
     Long getCount();
   }
+
+  Page<Route> findByAirline(String airline, Pageable pageable);
+
+  long countByAirline(String airline);
 
   /**
    * Distinct departure destinations per source airport, ranked by count descending.
